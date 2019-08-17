@@ -35,7 +35,7 @@ See https://github.com/janten/dpt-rp1-py.")
           (when args
             (concat " " args))))
 
-(defun dpt-list-documents-view (process msg)
+(defun dpt-view (process msg)
   (when (memq (process-status process) '(exit signal))
     (pop-to-buffer "*dpt-listing*")
     (goto-char (point-min))
@@ -65,12 +65,24 @@ See https://github.com/janten/dpt-rp1-py.")
     (read-only-mode)
     (dpt-mode)))
 
+(defun dpt-view-next-folder ()
+  (interactive)
+  (end-of-line)
+  (re-search-forward "^Document*/" nil t)
+  (beginning-of-line))
+
+(defun dpt-view-previous-folder ()
+  (interactive)
+  (beginning-of-line)
+  (re-search-backward "^Document*/" nil t)
+  (beginning-of-line))
+
 (defun dpt-list-documents ()
   (interactive)
   (set-process-sentinel
    (start-process-shell-command
     "dptrp1" "*dpt-listing*" (dpt-build-command "list-documents"))
-   'dpt-list-documents-view))
+   'dpt-view))
 
 (defun dpt-download (src dest)
   "Download file from DPT RP1."
@@ -120,8 +132,8 @@ See https://github.com/janten/dpt-rp1-py.")
             (define-key map (kbd "<C-return>") 'dpt-download-listing-at-point)
             (define-key map (kbd "d") 'dpt-download-listing-at-point)
             (define-key map (kbd "u") 'dpt-upload-to-directory-at-point)
-            (define-key map (kbd "n") 'next-line)
-            (define-key map (kbd "p") 'previous-line)
+            (define-key map (kbd "n") 'dpt-view-next-folder)
+            (define-key map (kbd "p") 'dpt-view-previous-folder)
             (define-key map (kbd "q") 'kill-current-buffer)
             map))
 
