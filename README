@@ -1,0 +1,4 @@
+* dpt-mode
+
+  A minor mode that wraps [[https://github.com/janten/dpt-rp1-py][dpt-rp1-py]].  Allows interacting with Sony's
+  DPT RP1 tablet from within emacs.
