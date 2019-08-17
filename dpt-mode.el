@@ -33,18 +33,18 @@ See https://github.com/janten/dpt-rp1-py.")
           (when args
             (concat " " args))))
 
+(defun dpt-list-documents-view (process msg)
+  (when (memq (process-status process) '(exit signal))
+    (pop-to-buffer "*dpt-listing*")
+    (goto-char (point-min))
+    (view-mode)))
+
 (defun dpt-list-documents ()
   (interactive)
-  (let ((result-buffer "*dpt*"))
-    (with-current-buffer (get-buffer-create result-buffer)
-      (erase-buffer))
-    (start-process-shell-command
-     "dptrp1" result-buffer
-     (dpt-build-command "list-documents"))
-    (with-current-buffer result-buffer
-      (goto-char (point-min))
-      (dpt-mode))
-    (pop-to-buffer result-buffer)))
+  (set-process-sentinel
+   (start-process-shell-command
+    "dptrp1" "*dpt-listing*" (dpt-build-command "list-documents"))
+   'dpt-list-documents-view))
 
 (defun dpt-download (src dest)
   "Download file from DPT RP1."
@@ -54,7 +54,6 @@ See https://github.com/janten/dpt-rp1-py.")
   (dpt-run-command "download" (concat "'" src "' " dest)))
 
 (defun dpt-listing-download ()
-  (interactive)
   (let* ((src (thing-at-point 'line t))
          (len (length src))
          (dest (read-file-name "To: ")))
