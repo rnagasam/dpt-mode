@@ -19,22 +19,61 @@ See https://github.com/janten/dpt-rp1-py.")
   (if (not (executable-find dpt-script))
       (error "%s not found." dpt-script)))
 
-(defun dpt-build-command (command args)
+(defun dpt-argument-p (command)
+  "Check whether COMMAND requires an argument."
+  (not (string-equal command "list-documents")))
+
+(defun dpt-build-command (command &optional args)
   "Build command to run in shell."
-  (interactive)
   (concat dpt-script
           " --addr " dpt-addr
           " --client-id " dpt-client-id
           " --key " dpt-private-key
-          " " command " " args))
+          " " command
+          (when args
+            (concat " " args))))
 
-(defun dpt-run-command (command args)
+(defun dpt-list-documents ()
+  (interactive)
+  (let ((result-buffer "*dpt*"))
+    (with-current-buffer (get-buffer-create result-buffer)
+      (erase-buffer))
+    (start-process-shell-command
+     "dptrp1" result-buffer
+     (dpt-build-command "list-documents"))
+    (with-current-buffer result-buffer
+      (goto-char (point-min))
+      (dpt-mode))
+    (pop-to-buffer result-buffer)))
+
+(defun dpt-download (src dest)
+  "Download file from DPT RP1."
+  (interactive
+   (list (read-string "From: ")
+         (read-file-name "To: ")))
+  (dpt-run-command "download" (concat "'" src "' " dest)))
+
+(defun dpt-listing-download ()
+  (interactive)
+  (let* ((src (thing-at-point 'line t))
+         (len (length src))
+         (dest (read-file-name "To: ")))
+    (dpt-download (substring src 0 (- len 1)) dest)))
+
+(defun dpt-run-command (command &optional args)
   "Run `dpt-script' with COMMAND and ARGS."
   (interactive
    (let ((com (completing-read
-               "Command: " dpt-available-commands)))
-     (list com
-           (if (string-equal com "list-documents")
-               ""
-             (read-string "Args: ")))))
-  (shell-command (dpt-build-command command args) "*dpt*" "*dpt-errors*"))
+               "Command: " dpt-available-commands nil t)))
+     (list com (when (dpt-argument-p com) (read-string "Args: ")))))
+  (start-process-shell-command "dpt-run" "*dpt-run-output*"
+                               (dpt-build-command command args)))
+
+(define-minor-mode dpt-mode
+  "Interact with DPT RP1"
+  :lighter "Dpt"
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-<RET>") 'dpt-listing-download)
+            map))
+
+(provide 'dpt-mode)
