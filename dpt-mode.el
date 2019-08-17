@@ -1,6 +1,8 @@
 ;;;; Digital Paper minor mode
 ;;;; requires https://github.com/janten/dpt-rp1-py
 
+(require 'subr-x)
+
 (defvar dpt-script "dptrp1"
   "Name of script used to interact with DPT RP1.
 See https://github.com/janten/dpt-rp1-py.")
@@ -37,7 +39,8 @@ See https://github.com/janten/dpt-rp1-py.")
   (when (memq (process-status process) '(exit signal))
     (pop-to-buffer "*dpt-listing*")
     (goto-char (point-min))
-    (view-mode)))
+    (read-only-mode)
+    (dpt-mode)))
 
 (defun dpt-list-documents ()
   (interactive)
@@ -53,11 +56,30 @@ See https://github.com/janten/dpt-rp1-py.")
          (read-file-name "To: ")))
   (dpt-run-command "download" (concat "'" src "' " dest)))
 
-(defun dpt-listing-download ()
-  (let* ((src (thing-at-point 'line t))
-         (len (length src))
-         (dest (read-file-name "To: ")))
-    (dpt-download (substring src 0 (- len 1)) dest)))
+(defun dpt-download-listing-at-point ()
+  (interactive)
+  (let* ((src (string-trim-right
+               (thing-at-point 'line t)))
+         (dest (read-file-name "Save as: ")))
+    (dpt-download src dest)))
+
+(defun dpt-get-directory-at-point ()
+  (file-name-directory (string-trim-right (thing-at-point 'line t))))
+
+(defun dpt-upload (src dest)
+  "Upload file to DPT RP1."
+  (interactive
+   (list (read-file-name "From: ")
+         (read-string "To: ")))
+  (dpt-run-command "upload" (concat src " '" dest "'")))
+
+(defun dpt-upload-to-directory-at-point ()
+  (interactive)
+  (let* ((dir (dpt-get-directory-at-point))
+         (src (read-file-name "Upload: "))
+         (default (concat dir (file-name-nondirectory src)))
+         (dest (read-string "To: " default nil default)))
+    (dpt-upload src dest)))
 
 (defun dpt-run-command (command &optional args)
   "Run `dpt-script' with COMMAND and ARGS."
@@ -72,7 +94,12 @@ See https://github.com/janten/dpt-rp1-py.")
   "Interact with DPT RP1"
   :lighter "Dpt"
   :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "C-<RET>") 'dpt-listing-download)
+            (define-key map (kbd "<C-return>") 'dpt-download-listing-at-point)
+            (define-key map (kbd "d") 'dpt-download-listing-at-point)
+            (define-key map (kbd "u") 'dpt-upload-to-directory-at-point)
+            (define-key map (kbd "n") 'next-line)
+            (define-key map (kbd "p") 'previous-line)
+            (define-key map (kbd "q") 'kill-current-buffer)
             map))
 
 (provide 'dpt-mode)
