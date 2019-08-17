@@ -39,6 +39,29 @@ See https://github.com/janten/dpt-rp1-py.")
   (when (memq (process-status process) '(exit signal))
     (pop-to-buffer "*dpt-listing*")
     (goto-char (point-min))
+    (sort-lines nil (point-min) (point-max))
+    ;; Format buffer -- structure directories and files better.
+    (save-excursion
+      (let ((prev (file-name-directory (thing-at-point 'line t))))
+        (insert prev)
+        (newline)
+        (while (not (last-line-p))
+          (let ((curr (file-name-directory (thing-at-point 'line t)))
+                (name (file-name-base (thing-at-point 'line t))))
+            (if (not (string-equal prev curr))
+                ;; new folder -- create a section
+                (progn (newline)
+                       (insert curr) ; insert current folder name
+                       (newline)
+                       (insert "  ")
+                       (insert name)
+                       (kill-line)
+                       (setq prev curr))
+              ;; same folder -- place filename below
+              (kill-line)
+              (insert "  ")
+              (insert name)))
+          (forward-line))))
     (read-only-mode)
     (dpt-mode)))
 
