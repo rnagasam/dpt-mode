@@ -36,6 +36,8 @@ See https://github.com/janten/dpt-rp1-py.")
             (concat " " args))))
 
 (defun dpt-view (process msg)
+  ;; wait until `dpt-list-documents' has finished, then
+  ;; `pop-to-buffer'.
   (when (memq (process-status process) '(exit signal))
     (pop-to-buffer "*dpt-listing*")
     (goto-char (point-min))
@@ -43,7 +45,7 @@ See https://github.com/janten/dpt-rp1-py.")
     ;; Format buffer -- structure directories and files better.
     (save-excursion
       (let ((prev (file-name-directory (thing-at-point 'line t))))
-        (insert prev)
+        (insert "* " prev)
         (newline)
         (while (not (last-line-p))
           (let ((curr (file-name-directory (thing-at-point 'line t)))
@@ -51,31 +53,18 @@ See https://github.com/janten/dpt-rp1-py.")
             (if (not (string-equal prev curr))
                 ;; new folder -- create a section
                 (progn (newline)
-                       (insert curr) ; insert current folder name
+                       (insert "* " curr) ; insert current folder name
                        (newline)
-                       (insert "  ")
-                       (insert name)
+                       (insert "  " name)
                        (kill-line)
                        (setq prev curr))
               ;; same folder -- place filename below
               (kill-line)
-              (insert "  ")
-              (insert name)))
+              (insert "  " name)))
           (forward-line))))
     (read-only-mode)
+    (outline-minor-mode)
     (dpt-mode)))
-
-(defun dpt-view-next-folder ()
-  (interactive)
-  (end-of-line)
-  (re-search-forward "^Document*/" nil t)
-  (beginning-of-line))
-
-(defun dpt-view-previous-folder ()
-  (interactive)
-  (beginning-of-line)
-  (re-search-backward "^Document*/" nil t)
-  (beginning-of-line))
 
 (defun dpt-list-documents ()
   (interactive)
@@ -132,8 +121,8 @@ See https://github.com/janten/dpt-rp1-py.")
             (define-key map (kbd "<C-return>") 'dpt-download-listing-at-point)
             (define-key map (kbd "d") 'dpt-download-listing-at-point)
             (define-key map (kbd "u") 'dpt-upload-to-directory-at-point)
-            (define-key map (kbd "n") 'dpt-view-next-folder)
-            (define-key map (kbd "p") 'dpt-view-previous-folder)
+            (define-key map (kbd "n") 'outline-next-visible-heading)
+            (define-key map (kbd "p") 'outline-previous-visible-heading)
             (define-key map (kbd "q") 'kill-current-buffer)
             map))
 
