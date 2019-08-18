@@ -81,20 +81,22 @@ See https://github.com/janten/dpt-rp1-py.")
          (read-file-name "To: ")))
   (dpt-run-command "download" (concat "'" src "' " dest)))
 
+(defun dpt-directory-of-entry ()
+  (interactive)
+  "Get directory of entry at point."
+  (save-excursion
+    (when (not (outline-on-heading-p))
+      (outline-previous-heading))
+    (substring (string-trim (thing-at-point 'line t)) 2 nil)))
+
 (defun dpt-path-of-entry ()
-  "Get full path of file at point."
+  (interactive)
+  "Get full path of entry at point."
   (if (outline-on-heading-p) ;; point at directory
       (error "Point must be at file and not directory")
-    (let ((name (string-trim (thing-at-point 'line t))))
-      (save-excursion
-        (outline-previous-heading)
-        (concat
-         ;; directory
-         (substring (string-trim (thing-at-point 'line t)) 2 nil)
-         ;; base name
-         name
-         ;; extension
-         ".pdf")))))
+    (concat (dpt-directory-of-entry)
+            (string-trim (thing-at-point 'line t)) ;; name
+            ".pdf")))
 
 (defun dpt-download-entry ()
   (interactive)
@@ -133,7 +135,6 @@ See https://github.com/janten/dpt-rp1-py.")
   "Interact with DPT RP1"
   :lighter "Dpt"
   :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "<C-return>") 'dpt-download-listing-at-point)
             (define-key map (kbd "d") 'dpt-download-entry)
             (define-key map (kbd "u") 'dpt-upload-to-directory-at-point)
             (define-key map (kbd "n") 'outline-next-visible-heading)
