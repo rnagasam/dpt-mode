@@ -1,4 +1,20 @@
-* dpt-mode
+dpt-mode
+--------
 
-  A minor mode that wraps [[https://github.com/janten/dpt-rp1-py][dpt-rp1-py]].  Allows interacting with Sony's
-  DPT RP1 tablet from within emacs.
+A minor mode that wraps dpt-rp1-py[1].  Allows interacting with Sony's
+DPT RP1 tablet from within emacs.
+
+Currently presents files stored in the device in an outline-mode
+buffer.  Keybindings help navigate quickly between folders and
+download files.  To get started run {M-x dpt-list-documents RET}.
+
+The following bindings are defined.
+
+  {n} - go to next visible folder
+  {p} - go to previous visible folder
+  {d} - download file at point
+  {u} - upload file to device
+  {q} - exit
+
+
+[1] https://github.com/janten/dpt-rp1-py

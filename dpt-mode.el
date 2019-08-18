@@ -136,7 +136,7 @@ See https://github.com/janten/dpt-rp1-py.")
   :lighter "Dpt"
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "d") 'dpt-download-entry)
-            (define-key map (kbd "u") 'dpt-upload-to-directory-at-point)
+            (define-key map (kbd "u") 'dpt-upload)
             (define-key map (kbd "n") 'outline-next-visible-heading)
             (define-key map (kbd "p") 'outline-previous-visible-heading)
             (define-key map (kbd "q") 'kill-current-buffer)
